@@ -1,0 +1,11 @@
+micronaut:
+  server:
+    cors:
+      enabled: true
+    port: 8080
+  application:
+    name: xsd2avro
+netty:
+  default:
+    allocator:
+      max-order: 3
