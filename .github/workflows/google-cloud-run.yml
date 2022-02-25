@@ -37,6 +37,8 @@ jobs:
         env:
           GCLOUD_IMAGE_REPOSITORY: ${{ secrets.GCLOUD_IMAGE_REPOSITORY }}
           TESTCONTAINERS_RYUK_DISABLED: true
+          GH_DEPLOY_USERNAME: ${{ env.GITHUB_REPOSITORY_OWNER }}
+          GH_DEPLOY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           export DOCKER_IMAGE=`echo "${GCLOUD_GCR}/${GCLOUD_PROJECT_ID}/${GCLOUD_IMAGE_REPOSITORY}/xsd2avro" | sed -e 's#//#/#' -e 's#^/##'`
           ./gradlew check dockerPush --no-daemon
