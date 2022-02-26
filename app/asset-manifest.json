@@ -1,0 +1,17 @@
+{
+  "files": {
+    "main.js": "https://selamanse.github.io/csb-9sm9cm/static/js/main.a4e869f5.chunk.js",
+    "main.js.map": "https://selamanse.github.io/csb-9sm9cm/static/js/main.a4e869f5.chunk.js.map",
+    "runtime-main.js": "https://selamanse.github.io/csb-9sm9cm/static/js/runtime-main.898def9a.js",
+    "runtime-main.js.map": "https://selamanse.github.io/csb-9sm9cm/static/js/runtime-main.898def9a.js.map",
+    "static/js/2.0df7ce7f.chunk.js": "https://selamanse.github.io/csb-9sm9cm/static/js/2.0df7ce7f.chunk.js",
+    "static/js/2.0df7ce7f.chunk.js.map": "https://selamanse.github.io/csb-9sm9cm/static/js/2.0df7ce7f.chunk.js.map",
+    "index.html": "https://selamanse.github.io/csb-9sm9cm/index.html",
+    "static/js/2.0df7ce7f.chunk.js.LICENSE.txt": "https://selamanse.github.io/csb-9sm9cm/static/js/2.0df7ce7f.chunk.js.LICENSE.txt"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.898def9a.js",
+    "static/js/2.0df7ce7f.chunk.js",
+    "static/js/main.a4e869f5.chunk.js"
+  ]
+}
