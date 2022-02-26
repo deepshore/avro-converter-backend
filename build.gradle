@@ -58,6 +58,9 @@ java {
 }
 
 tasks {
+    dockerfile {
+        baseImage = "openjdk:11-alpine"
+    }
     dockerBuild {
         images = ["${System.env.DOCKER_IMAGE ?: project.name}:$project.version"]
     }
