@@ -59,7 +59,7 @@ java {
 
 tasks {
     dockerfile {
-        baseImage = "openjdk:11-alpine"
+        baseImage = "azul/zulu-openjdk-alpine:11"
     }
     dockerBuild {
         images = ["${System.env.DOCKER_IMAGE ?: project.name}:$project.version"]
