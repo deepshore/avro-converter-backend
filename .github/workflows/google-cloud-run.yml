@@ -49,6 +49,7 @@ jobs:
 
           gcloud run deploy xsd2avro --quiet \
             --image "${DOCKER_IMAGE}" --project "${GCLOUD_PROJECT_ID}" \
+            --memory "1Gi" \
             --region "${GCLOUD_REGION}" --platform managed --allow-unauthenticated --format json
           echo "Invoke endpoint:"
           gcloud run services list --platform managed --format json | jq -r \
