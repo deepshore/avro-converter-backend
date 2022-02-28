@@ -4,11 +4,13 @@ import com.google.common.io.Files;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.util.StringUtils;
 import io.micronaut.http.HttpRequest;
+import io.micronaut.http.HttpResponse;
 import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
+import org.reactivestreams.Publisher;
 
 import java.io.File;
 import java.io.IOException;
@@ -98,6 +100,19 @@ class Xsd2avroControllerTest {
                         "  } ],\n" +
                         "  \"connect.name\" : \"com.github.jcustenborder.kafka.connect.transform.xml.model.BooksForm\"\n" +
                         "} ]",
+                result
+        );
+    }
+
+
+    @Test
+    void testConvertError() throws IOException {
+        final String body = Files.toString(new File("src/test/resources/testConvertFailure.json"), StandardCharsets.UTF_8);
+
+        final String result = client.toBlocking().retrieve(HttpRequest.POST("/xsd2avro/connect/xsd", body), String.class);
+
+        assertEquals(
+                "Error while converting XSD to AVRO: Illegal character in: bo-ok",
                 result
         );
     }

@@ -1,4 +1,4 @@
-package de.deepshore.kafka;
+package de.deepshore.kafka.models;
 
 import io.micronaut.core.annotation.Introspected;
 

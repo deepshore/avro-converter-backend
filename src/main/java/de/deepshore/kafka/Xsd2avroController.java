@@ -1,14 +1,16 @@
 package de.deepshore.kafka;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jcustenborder.kafka.connect.transform.xml.FromXml;
 import com.google.common.io.Files;
+import de.deepshore.kafka.models.XsdPack;
 import io.confluent.connect.avro.AvroData;
+import io.micronaut.http.HttpResponse;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.*;
-import io.micronaut.http.server.exceptions.HttpServerException;
 import org.apache.kafka.connect.connector.ConnectRecord;
 import org.apache.kafka.connect.sink.SinkRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,7 +23,7 @@ import static de.deepshore.kafka.Xsd2AvroUtil.getDummySinkRecord;
 @Controller("/xsd2avro")
 public class Xsd2avroController {
     public static final String SCHEMA_PATH_CONFIG = "schema.path";
-    static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final Logger LOG = LoggerFactory.getLogger(Xsd2avroController.class);
 
 
     @Get(uri = "/", produces = "plain/text")
@@ -32,13 +34,14 @@ public class Xsd2avroController {
     @Post(uri = "/connect/xsd")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String convert(@Body XsdPack xsdpack, @QueryValue(defaultValue = "false") Boolean pretty) {
+    public HttpResponse convert(@Body XsdPack xsdpack, @QueryValue(defaultValue = "false") Boolean pretty) {
         File xsdFile = null;
         try {
             xsdFile = File.createTempFile("xsd", String.valueOf(LocalDateTime.now()));
             Files.write(xsdpack.getXsd().getBytes(StandardCharsets.UTF_8), xsdFile);
         } catch (IOException e) {
-            throw new HttpServerException("Error while creating temporary File for XSD");
+            LOG.error("Error while creating temporary File for XSD", e);
+            return HttpResponse.serverError("Internal Server Error while processing XSD");
         }
 
         try(FromXml.Value transform = new FromXml.Value()) {
@@ -50,10 +53,11 @@ public class Xsd2avroController {
             final AvroData aa = new AvroData(20000);
 
             final org.apache.avro.Schema valueSchema = aa.fromConnectSchema(transformedRecord.valueSchema());
-            return valueSchema.toString(pretty);
+            return HttpResponse.ok(valueSchema.toString(pretty));
 
         } catch (Exception e) {
-            throw new HttpServerException("Error while converting XSD to AVRO");
+            LOG.info("Error while converting XSD to AVRO", e);
+            return HttpResponse.ok(String.format("Error while converting XSD to AVRO: %s", e.getMessage()));
         }
 
     }
