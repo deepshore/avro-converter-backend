@@ -37,7 +37,7 @@ public class Xsd2avroController {
     public HttpResponse convert(@Body XsdPack xsdpack, @QueryValue(defaultValue = "false") Boolean pretty) {
         File xsdFile = null;
 
-        if(!xsdpack.getXsd().startsWith("<xsd")){
+        if(!xsdpack.getXsd().startsWith("<?xml") && !xsdpack.getXsd().startsWith("<xsd")){
             return HttpResponse.ok("Please provide a valid xml schema.");
         }
         if(!xsdpack.getXml().startsWith("<?xml")){
