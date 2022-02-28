@@ -1,22 +1,20 @@
 package de.deepshore.kafka;
 
 import com.google.common.io.Files;
-import io.micronaut.context.annotation.Requires;
-import io.micronaut.core.util.StringUtils;
 import io.micronaut.http.HttpRequest;
-import io.micronaut.http.HttpResponse;
 import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
-import org.reactivestreams.Publisher;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @MicronautTest
 class Xsd2avroControllerTest {
@@ -104,17 +102,22 @@ class Xsd2avroControllerTest {
         );
     }
 
-
-    @Test
-    void testConvertError() throws IOException {
-        final String body = Files.toString(new File("src/test/resources/testConvertFailure.json"), StandardCharsets.UTF_8);
+    @ParameterizedTest
+    @CsvSource({
+            "testConvertFailure.json, Error while converting XSD to AVRO: Illegal character in: bo-ok",
+            "testConvertInvalidInput.json, Please provide a valid xml schema.",
+            "testConvertInvalidInputPartial.json, Please provide a valid xml file.",
+    })
+    void testConvertErrorInvalidInputs(String input, String expected) throws IOException {
+        final String body = Files.toString(new File(String.format("src/test/resources/%s", input)), StandardCharsets.UTF_8);
 
         final String result = client.toBlocking().retrieve(HttpRequest.POST("/xsd2avro/connect/xsd", body), String.class);
 
         assertEquals(
-                "Error while converting XSD to AVRO: Illegal character in: bo-ok",
+                expected,
                 result
         );
     }
+
 
 }

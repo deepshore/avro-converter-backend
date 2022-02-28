@@ -36,6 +36,14 @@ public class Xsd2avroController {
     @Produces(MediaType.APPLICATION_JSON)
     public HttpResponse convert(@Body XsdPack xsdpack, @QueryValue(defaultValue = "false") Boolean pretty) {
         File xsdFile = null;
+
+        if(!xsdpack.getXsd().startsWith("<xsd")){
+            return HttpResponse.ok("Please provide a valid xml schema.");
+        }
+        if(!xsdpack.getXml().startsWith("<?xml")){
+            return HttpResponse.ok("Please provide a valid xml file.");
+        }
+
         try {
             xsdFile = File.createTempFile("xsd", String.valueOf(LocalDateTime.now()));
             Files.write(xsdpack.getXsd().getBytes(StandardCharsets.UTF_8), xsdFile);

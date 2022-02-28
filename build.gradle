@@ -44,6 +44,7 @@ dependencies {
     runtimeOnly("ch.qos.logback:logback-classic")
     implementation("io.micronaut:micronaut-validation")
     implementation("com.github.jcustenborder.kafka.connect:kafka-connect-parent:2.8.0-1")
+    testImplementation('org.junit.jupiter:junit-jupiter-params:5.8.1')
 
 
 }
