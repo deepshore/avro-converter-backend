@@ -23,10 +23,12 @@ import static de.deepshore.kafka.Xsd2AvroUtil.getDummySinkRecord;
 @Controller("/xsd2avro")
 public class Xsd2avroController {
     public static final String SCHEMA_PATH_CONFIG = "schema.path";
+    public static final String PACKAGE_CONFIG = "package";
+    public static final String XJC_OPTIONS_STRICT_CHECK_CONFIG = "xjc.options.strict.check.enabled";
     private static final Logger LOG = LoggerFactory.getLogger(Xsd2avroController.class);
 
 
-    @Get(uri = "/", produces = "plain/text")
+    @Get(produces = "plain/text")
     public String status() {
         return "Hello! I can convert xsd to avro.";
     }
@@ -35,7 +37,7 @@ public class Xsd2avroController {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public HttpResponse convert(@Body XsdPack xsdpack, @QueryValue(defaultValue = "false") Boolean pretty) {
-        File xsdFile = null;
+        File xsdFile;
 
         if(!xsdpack.getXsd().startsWith("<?xml") && !xsdpack.getXsd().startsWith("<xsd")){
             return HttpResponse.ok("Please provide a valid xml schema.");
@@ -54,7 +56,11 @@ public class Xsd2avroController {
 
         try(FromXml.Value transform = new FromXml.Value()) {
             transform.configure(
-                    Map.of(SCHEMA_PATH_CONFIG, xsdFile.getAbsoluteFile().toURL().toString(), "xjc.options.strict.check.enabled", "false")
+                    Map.of(
+                            SCHEMA_PATH_CONFIG, xsdFile.getAbsoluteFile().toURL().toString(),
+                            XJC_OPTIONS_STRICT_CHECK_CONFIG, "false",
+                            PACKAGE_CONFIG, this.getClass().getPackageName()
+                    )
             );
 
             ConnectRecord<SinkRecord> transformedRecord = transform.apply(getDummySinkRecord(xsdpack.getXml()));

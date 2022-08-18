@@ -39,7 +39,7 @@ class Xsd2avroControllerTest {
         final String result = client.toBlocking().retrieve(HttpRequest.POST("/xsd2avro/connect/xsd", body), String.class);
 
         assertEquals(
-                "[\"null\",{\"type\":\"record\",\"name\":\"BooksForm\",\"namespace\":\"com.github.jcustenborder.kafka.connect.transform.xml.model\",\"fields\":[{\"name\":\"book\",\"type\":[\"null\",{\"type\":\"array\",\"items\":[\"null\",{\"type\":\"record\",\"name\":\"BookForm\",\"fields\":[{\"name\":\"author\",\"type\":\"string\"},{\"name\":\"title\",\"type\":\"string\"},{\"name\":\"genre\",\"type\":\"string\"},{\"name\":\"price\",\"type\":[\"null\",\"float\"],\"default\":null},{\"name\":\"pub_date\",\"type\":{\"type\":\"int\",\"connect.version\":1,\"connect.name\":\"org.apache.kafka.connect.data.Date\",\"logicalType\":\"date\"}},{\"name\":\"review\",\"type\":\"string\"},{\"name\":\"id\",\"type\":[\"null\",\"string\"],\"default\":null}],\"connect.name\":\"com.github.jcustenborder.kafka.connect.transform.xml.model.BookForm\"}]}],\"default\":null}],\"connect.name\":\"com.github.jcustenborder.kafka.connect.transform.xml.model.BooksForm\"}]",
+                "[\"null\",{\"type\":\"record\",\"name\":\"BooksForm\",\"namespace\":\"de.deepshore.kafka\",\"fields\":[{\"name\":\"book\",\"type\":[\"null\",{\"type\":\"array\",\"items\":[\"null\",{\"type\":\"record\",\"name\":\"BookForm\",\"fields\":[{\"name\":\"author\",\"type\":\"string\"},{\"name\":\"title\",\"type\":\"string\"},{\"name\":\"genre\",\"type\":\"string\"},{\"name\":\"price\",\"type\":[\"null\",\"float\"],\"default\":null},{\"name\":\"pub_date\",\"type\":{\"type\":\"int\",\"connect.version\":1,\"connect.name\":\"org.apache.kafka.connect.data.Date\",\"logicalType\":\"date\"}},{\"name\":\"review\",\"type\":\"string\"},{\"name\":\"id\",\"type\":[\"null\",\"string\"],\"default\":null}],\"connect.name\":\"de.deepshore.kafka.BookForm\"}]}],\"default\":null}],\"connect.name\":\"de.deepshore.kafka.BooksForm\"}]",
                 result
         );
     }
@@ -54,7 +54,7 @@ class Xsd2avroControllerTest {
                 "[ \"null\", {\n" +
                         "  \"type\" : \"record\",\n" +
                         "  \"name\" : \"BooksForm\",\n" +
-                        "  \"namespace\" : \"com.github.jcustenborder.kafka.connect.transform.xml.model\",\n" +
+                        "  \"namespace\" : \"de.deepshore.kafka\",\n" +
                         "  \"fields\" : [ {\n" +
                         "    \"name\" : \"book\",\n" +
                         "    \"type\" : [ \"null\", {\n" +
@@ -91,12 +91,12 @@ class Xsd2avroControllerTest {
                         "          \"type\" : [ \"null\", \"string\" ],\n" +
                         "          \"default\" : null\n" +
                         "        } ],\n" +
-                        "        \"connect.name\" : \"com.github.jcustenborder.kafka.connect.transform.xml.model.BookForm\"\n" +
+                        "        \"connect.name\" : \"de.deepshore.kafka.BookForm\"\n" +
                         "      } ]\n" +
                         "    } ],\n" +
                         "    \"default\" : null\n" +
                         "  } ],\n" +
-                        "  \"connect.name\" : \"com.github.jcustenborder.kafka.connect.transform.xml.model.BooksForm\"\n" +
+                        "  \"connect.name\" : \"de.deepshore.kafka.BooksForm\"\n" +
                         "} ]",
                 result
         );
