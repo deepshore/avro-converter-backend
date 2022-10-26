@@ -25,15 +25,23 @@ jobs:
         with:
           java-version: 11
       - name: Setup Google Cloud CLI
+        if: github.ref == 'refs/heads/main'
         uses: google-github-actions/setup-gcloud@v0.2.1
         with:
           version: '290.0.1'
           service_account_key: ${{ secrets.GCLOUD_SA_KEY }}
           project_id: ${{ secrets.GCLOUD_PROJECT_ID }}
       - name: Docker Login
+        if: github.ref == 'refs/heads/main'
         run: |
           gcloud auth configure-docker
       - name: Build And Push Docker Image
+          if: github.ref != 'refs/heads/main'
+          env:
+            TESTCONTAINERS_RYUK_DISABLED: true
+          run: ./gradlew check --no-daemon
+      - name: Build And Push Docker Image
+        if: github.ref == 'refs/heads/main'
         env:
           GCLOUD_IMAGE_REPOSITORY: ${{ secrets.GCLOUD_IMAGE_REPOSITORY }}
           TESTCONTAINERS_RYUK_DISABLED: true
