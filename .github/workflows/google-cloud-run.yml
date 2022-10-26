@@ -41,8 +41,9 @@ jobs:
           GH_DEPLOY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           export DOCKER_IMAGE=`echo "${GCLOUD_GCR}/${GCLOUD_PROJECT_ID}/${GCLOUD_IMAGE_REPOSITORY}/xsd2avro" | sed -e 's#//#/#' -e 's#^/##'`
-          ./gradlew check dockerPush --no-daemon
+          ./gradlew check assembleDist dockerPush --no-daemon
       - name: Deploy Cloud Run
+        if: github.ref == 'refs/heads/main'
         run: |
           DOCKER_IMAGE_REPOSITORY=$(docker images --format "{{.Repository}}" | grep xsd2avro)
           DOCKER_IMAGE=$(docker images --format "{{.Repository}}:{{.Tag}}" "${DOCKER_IMAGE_REPOSITORY}" )
@@ -54,3 +55,9 @@ jobs:
           echo "Invoke endpoint:"
           gcloud run services list --platform managed --format json | jq -r \
             '.[] | select(.metadata.name == "google-cloud-run-maven-test") | .status.address.url'
+      - name: Release
+        uses: fnkr/github-action-ghr@v1
+        if: github.ref == 'refs/heads/main'
+        env:
+          GHR_PATH: build/distributions
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
