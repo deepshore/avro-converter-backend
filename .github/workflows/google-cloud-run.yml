@@ -53,7 +53,7 @@ jobs:
           export DOCKER_IMAGE=`echo "${GCLOUD_GCR}/${GCLOUD_PROJECT_ID}/${GCLOUD_IMAGE_REPOSITORY}/xsd2avro" | sed -e 's#//#/#' -e 's#^/##'`
           ./gradlew check assembleDist dockerPush --no-daemon
       - name: Deploy Cloud Run
-        if: github.ref == 'refs/heads/main'
+        if: ${{ (github.ref == 'refs/heads/main') || (startsWith(github.ref, 'refs/tags/')) }}
         run: |
           DOCKER_IMAGE_REPOSITORY=$(docker images --format "{{.Repository}}" | grep xsd2avro)
           DOCKER_IMAGE=$(docker images --format "{{.Repository}}:{{.Tag}}" "${DOCKER_IMAGE_REPOSITORY}" )
