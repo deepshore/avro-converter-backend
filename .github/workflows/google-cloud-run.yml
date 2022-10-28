@@ -32,7 +32,7 @@ jobs:
           service_account_key: ${{ secrets.GCLOUD_SA_KEY }}
           project_id: ${{ secrets.GCLOUD_PROJECT_ID }}
       - name: Docker Login
-        if: github.ref == 'refs/heads/main'
+        if: ${{ (github.ref == 'refs/heads/main') || (startsWith(github.ref, 'refs/tags/')) }}
         run: |
           gcloud auth configure-docker
       - name: Build for verification
