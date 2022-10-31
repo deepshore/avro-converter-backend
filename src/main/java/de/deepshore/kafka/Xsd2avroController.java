@@ -2,6 +2,7 @@ package de.deepshore.kafka;
 
 import com.github.jcustenborder.kafka.connect.transform.xml.FromXml;
 import com.google.common.io.Files;
+import de.deepshore.kafka.models.AvroPack;
 import de.deepshore.kafka.models.XsdPack;
 import io.confluent.connect.avro.AvroData;
 import io.micronaut.http.HttpResponse;
@@ -24,6 +25,7 @@ import static de.deepshore.kafka.Xsd2AvroUtil.getDummySinkRecord;
 public class Xsd2avroController {
     public static final String SCHEMA_PATH_CONFIG = "schema.path";
     public static final String PACKAGE_CONFIG = "package";
+    public static final String XPATH_FOR_RECORD_KEY = "xpath.for.record.key";
     public static final String XJC_OPTIONS_STRICT_CHECK_CONFIG = "xjc.options.strict.check.enabled";
     private static final Logger LOG = LoggerFactory.getLogger(Xsd2avroController.class);
 
@@ -36,7 +38,7 @@ public class Xsd2avroController {
     @Post(uri = "/connect/xsd")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public HttpResponse convert(@Body XsdPack xsdpack, @QueryValue(defaultValue = "false") Boolean pretty) {
+    public HttpResponse convert(@Body XsdPack xsdpack) {
         File xsdFile;
 
         if(!xsdpack.getXsd().startsWith("<?xml") && !xsdpack.getXsd().startsWith("<xsd")){
@@ -54,12 +56,14 @@ public class Xsd2avroController {
             return HttpResponse.serverError("Internal Server Error while processing XSD");
         }
 
-        try(FromXml.Value transform = new FromXml.Value()) {
+        try {
+            FromXml.Value transform = new FromXml.Value();
             transform.configure(
                     Map.of(
                             SCHEMA_PATH_CONFIG, xsdFile.getAbsoluteFile().toURL().toString(),
                             XJC_OPTIONS_STRICT_CHECK_CONFIG, "false",
-                            PACKAGE_CONFIG, this.getClass().getPackageName()
+                            PACKAGE_CONFIG, this.getClass().getPackageName(),
+                            XPATH_FOR_RECORD_KEY, xsdpack.getXpathRecordKey()
                     )
             );
 
@@ -67,14 +71,26 @@ public class Xsd2avroController {
             final AvroData aa = new AvroData(20000);
 
             final org.apache.avro.Schema valueSchema = aa.fromConnectSchema(transformedRecord.valueSchema());
+            final org.apache.avro.Schema keySchema = aa.fromConnectSchema(transformedRecord.keySchema());
 
-            final String valueSchemaString = valueSchema.toString(pretty).replace(this.getClass().getPackageName(), xsdpack.getNamespace());
+            final String valueSchemaString = valueSchema.toString().replace(this.getClass().getPackageName(), xsdpack.getNamespace());
+            final String keySchemaString = keySchema.toString().replace(this.getClass().getPackageName(), xsdpack.getNamespace());
 
-            return HttpResponse.ok(valueSchemaString);
+            final String optionalKey = (null != transformedRecord.key()) ? transformedRecord.key().toString() : null;
 
+            final AvroPack ap = new AvroPack(keySchemaString,
+                    optionalKey,
+                    valueSchemaString,
+                    transformedRecord.value().toString());
+
+            return HttpResponse.ok(ap);
+
+        } catch (NullPointerException npe) {
+            LOG.info("Error while converting XSD to AVRO", npe);
+            return HttpResponse.ok(String.format("Error while converting XSD to AVRO: %s", npe.getLocalizedMessage()));
         } catch (Exception e) {
-            LOG.info("Error while converting XSD to AVRO", e);
-            return HttpResponse.ok(String.format("Error while converting XSD to AVRO: %s", e.getMessage()));
+            LOG.info("Error while converting XSD to AVRO", e.getStackTrace());
+            return HttpResponse.ok(String.format("Error while converting XSD to AVRO: %s", e.getLocalizedMessage()));
         }
 
     }
