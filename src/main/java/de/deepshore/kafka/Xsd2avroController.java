@@ -67,7 +67,10 @@ public class Xsd2avroController {
             final AvroData aa = new AvroData(20000);
 
             final org.apache.avro.Schema valueSchema = aa.fromConnectSchema(transformedRecord.valueSchema());
-            return HttpResponse.ok(valueSchema.toString(pretty));
+
+            final String valueSchemaString = valueSchema.toString(pretty).replace(this.getClass().getPackageName(), xsdpack.getNamespace());
+
+            return HttpResponse.ok(valueSchemaString);
 
         } catch (Exception e) {
             LOG.info("Error while converting XSD to AVRO", e);
