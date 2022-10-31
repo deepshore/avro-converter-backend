@@ -119,5 +119,16 @@ class Xsd2avroControllerTest {
         );
     }
 
+    @Test
+    void testConvertNamespace() throws IOException {
+        final String body = Files.toString(new File("src/test/resources/testConvertNamespace.json"), StandardCharsets.UTF_8);
+
+        final String result = client.toBlocking().retrieve(HttpRequest.POST("/xsd2avro/connect/xsd", body), String.class);
+
+        assertEquals(
+                "[\"null\",{\"type\":\"record\",\"name\":\"BooksForm\",\"namespace\":\"de.mydomain.package\",\"fields\":[{\"name\":\"book\",\"type\":[\"null\",{\"type\":\"array\",\"items\":[\"null\",{\"type\":\"record\",\"name\":\"BookForm\",\"fields\":[{\"name\":\"author\",\"type\":\"string\"},{\"name\":\"title\",\"type\":\"string\"},{\"name\":\"genre\",\"type\":\"string\"},{\"name\":\"price\",\"type\":[\"null\",\"float\"],\"default\":null},{\"name\":\"pub_date\",\"type\":{\"type\":\"int\",\"connect.version\":1,\"connect.name\":\"org.apache.kafka.connect.data.Date\",\"logicalType\":\"date\"}},{\"name\":\"review\",\"type\":\"string\"},{\"name\":\"id\",\"type\":[\"null\",\"string\"],\"default\":null}],\"connect.name\":\"de.mydomain.package.BookForm\"}]}],\"default\":null}],\"connect.name\":\"de.mydomain.package.BooksForm\"}]",
+                result
+        );
+    }
 
 }
