@@ -10,6 +10,7 @@ import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.*;
 import org.apache.kafka.connect.connector.ConnectRecord;
 import org.apache.kafka.connect.sink.SinkRecord;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,8 +28,8 @@ public class Xsd2avroController {
     public static final String PACKAGE_CONFIG = "package";
     public static final String XPATH_FOR_RECORD_KEY = "xpath.for.record.key";
     public static final String XJC_OPTIONS_STRICT_CHECK_CONFIG = "xjc.options.strict.check.enabled";
+    public static final String XJC_OPTIONS_STRICT_CHECK_CONFIG_VALUE = "false";
     private static final Logger LOG = LoggerFactory.getLogger(Xsd2avroController.class);
-
 
     @Get(produces = "plain/text")
     public String status() {
@@ -56,32 +57,49 @@ public class Xsd2avroController {
             return HttpResponse.serverError("Internal Server Error while processing XSD");
         }
 
-        try {
-            FromXml.Value transform = new FromXml.Value();
-            transform.configure(
-                    Map.of(
-                            SCHEMA_PATH_CONFIG, xsdFile.getAbsoluteFile().toURL().toString(),
-                            XJC_OPTIONS_STRICT_CHECK_CONFIG, "false",
-                            PACKAGE_CONFIG, this.getClass().getPackageName(),
-                            XPATH_FOR_RECORD_KEY, xsdpack.getXpathRecordKey()
-                    )
-            );
+        try(FromXml.Value transform = new FromXml.Value()) {
+
+
+            Map<String, String> transformConfig;
+
+            if("".equals(xsdpack.getXpathRecordKey())){
+                transformConfig = Map.of(
+                        SCHEMA_PATH_CONFIG, xsdFile.getAbsoluteFile().toURL().toString(),
+                        XJC_OPTIONS_STRICT_CHECK_CONFIG, XJC_OPTIONS_STRICT_CHECK_CONFIG_VALUE,
+                        PACKAGE_CONFIG, this.getClass().getPackageName(),
+                        XPATH_FOR_RECORD_KEY, xsdpack.getXpathRecordKey()
+                );
+            } else {
+                transformConfig = Map.of(
+                        SCHEMA_PATH_CONFIG, xsdFile.getAbsoluteFile().toURL().toString(),
+                        XJC_OPTIONS_STRICT_CHECK_CONFIG, XJC_OPTIONS_STRICT_CHECK_CONFIG_VALUE,
+                        PACKAGE_CONFIG, this.getClass().getPackageName()
+                );
+            }
+
+            transform.configure(transformConfig);
 
             ConnectRecord<SinkRecord> transformedRecord = transform.apply(getDummySinkRecord(xsdpack.getXml()));
-            final AvroData aa = new AvroData(20000);
+            final AvroData ad = new AvroData(20000);
 
-            final org.apache.avro.Schema valueSchema = aa.fromConnectSchema(transformedRecord.valueSchema());
-            final org.apache.avro.Schema keySchema = aa.fromConnectSchema(transformedRecord.keySchema());
+            final org.apache.avro.Schema valueSchema = ad.fromConnectSchema(transformedRecord.valueSchema());
+            final org.apache.avro.Schema keySchema = ad.fromConnectSchema(transformedRecord.keySchema());
+
+            final Object oo = ad.fromConnectData(transformedRecord.valueSchema(), transformedRecord.value());
 
             final String valueSchemaString = valueSchema.toString().replace(this.getClass().getPackageName(), xsdpack.getNamespace());
             final String keySchemaString = keySchema.toString().replace(this.getClass().getPackageName(), xsdpack.getNamespace());
 
-            final String optionalKey = (null != transformedRecord.key()) ? transformedRecord.key().toString() : null;
+            final String optionalKeyString = (null != transformedRecord.key()) ? transformedRecord.key().toString() : null;
+
+            final JSONObject valueJson = new JSONObject(oo.toString());
+
 
             final AvroPack ap = new AvroPack(keySchemaString,
-                    optionalKey,
+                    optionalKeyString,
                     valueSchemaString,
-                    transformedRecord.value().toString());
+                    valueJson.toString()
+                    );
 
             return HttpResponse.ok(ap);
 
