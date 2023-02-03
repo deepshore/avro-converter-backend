@@ -66,14 +66,15 @@ public class Xsd2avroController {
                 transformConfig = Map.of(
                         SCHEMA_PATH_CONFIG, xsdFile.getAbsoluteFile().toURL().toString(),
                         XJC_OPTIONS_STRICT_CHECK_CONFIG, XJC_OPTIONS_STRICT_CHECK_CONFIG_VALUE,
-                        PACKAGE_CONFIG, this.getClass().getPackageName(),
-                        XPATH_FOR_RECORD_KEY, xsdpack.getXpathRecordKey()
+                        PACKAGE_CONFIG, this.getClass().getPackageName()
                 );
+
             } else {
                 transformConfig = Map.of(
                         SCHEMA_PATH_CONFIG, xsdFile.getAbsoluteFile().toURL().toString(),
                         XJC_OPTIONS_STRICT_CHECK_CONFIG, XJC_OPTIONS_STRICT_CHECK_CONFIG_VALUE,
-                        PACKAGE_CONFIG, this.getClass().getPackageName()
+                        PACKAGE_CONFIG, this.getClass().getPackageName(),
+                        XPATH_FOR_RECORD_KEY, xsdpack.getXpathRecordKey()
                 );
             }
 
