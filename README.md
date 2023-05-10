@@ -1,7 +1,13 @@
-## xsd2avro
-An app that can transform xsd (with an according xml) into an [AVRO schema](https://avro.apache.org/docs/current/spec.html).
+## xsd2avro-converter
+An api that can transform xsd (with an according xml) into an [AVRO schema](https://avro.apache.org/docs/current/spec.html).
 
+### Real life demo
+https://deepshore.de/avro-converter
 
+### Run locally
+```
+gradlew run
+```
 
 ---
 

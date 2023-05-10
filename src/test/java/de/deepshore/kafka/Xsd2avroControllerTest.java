@@ -1,6 +1,9 @@
 package de.deepshore.kafka;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Files;
+import de.deepshore.kafka.models.AvroPack;
+import de.deepshore.kafka.models.XsdPack;
 import io.micronaut.http.HttpRequest;
 import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
@@ -33,72 +36,29 @@ class Xsd2avroControllerTest {
     }
 
     @Test
-    void testConvert() throws IOException {
-        final String body = Files.toString(new File("src/test/resources/testConvert.json"), StandardCharsets.UTF_8);
+    void testConvert(ObjectMapper objectMapper) throws IOException {
+        final String schema = Files.toString(new File("src/test/resources/testConvert/schema.xml"), StandardCharsets.UTF_8);
+        final String value = Files.toString(new File("src/test/resources/testConvert/value.xml"), StandardCharsets.UTF_8);
 
-        final String result = client.toBlocking().retrieve(HttpRequest.POST("/xsd2avro/connect/xsd", body), String.class);
+        XsdPack bodyObj = new XsdPack(schema, value);
+
+        final AvroPack result = client.toBlocking().retrieve(HttpRequest.POST("/xsd2avro/connect/xsd", objectMapper.writeValueAsString(bodyObj)), AvroPack.class);
 
         assertEquals(
-                "[\"null\",{\"type\":\"record\",\"name\":\"BooksForm\",\"namespace\":\"de.deepshore.kafka\",\"fields\":[{\"name\":\"book\",\"type\":[\"null\",{\"type\":\"array\",\"items\":[\"null\",{\"type\":\"record\",\"name\":\"BookForm\",\"fields\":[{\"name\":\"author\",\"type\":\"string\"},{\"name\":\"title\",\"type\":\"string\"},{\"name\":\"genre\",\"type\":\"string\"},{\"name\":\"price\",\"type\":[\"null\",\"float\"],\"default\":null},{\"name\":\"pub_date\",\"type\":{\"type\":\"int\",\"connect.version\":1,\"connect.name\":\"org.apache.kafka.connect.data.Date\",\"logicalType\":\"date\"}},{\"name\":\"review\",\"type\":\"string\"},{\"name\":\"id\",\"type\":[\"null\",\"string\"],\"default\":null}],\"connect.name\":\"de.deepshore.kafka.BookForm\"}]}],\"default\":null}],\"connect.name\":\"de.deepshore.kafka.BooksForm\"}]",
-                result
+                null,
+                result.getKey()
         );
-    }
-
-    @Test
-    void testConvertPretty() throws IOException {
-        final String body = Files.toString(new File("src/test/resources/testConvert.json"), StandardCharsets.UTF_8);
-
-        final String result = client.toBlocking().retrieve(HttpRequest.POST("/xsd2avro/connect/xsd?pretty=true", body), String.class);
-
         assertEquals(
-                "[ \"null\", {\n" +
-                        "  \"type\" : \"record\",\n" +
-                        "  \"name\" : \"BooksForm\",\n" +
-                        "  \"namespace\" : \"de.deepshore.kafka\",\n" +
-                        "  \"fields\" : [ {\n" +
-                        "    \"name\" : \"book\",\n" +
-                        "    \"type\" : [ \"null\", {\n" +
-                        "      \"type\" : \"array\",\n" +
-                        "      \"items\" : [ \"null\", {\n" +
-                        "        \"type\" : \"record\",\n" +
-                        "        \"name\" : \"BookForm\",\n" +
-                        "        \"fields\" : [ {\n" +
-                        "          \"name\" : \"author\",\n" +
-                        "          \"type\" : \"string\"\n" +
-                        "        }, {\n" +
-                        "          \"name\" : \"title\",\n" +
-                        "          \"type\" : \"string\"\n" +
-                        "        }, {\n" +
-                        "          \"name\" : \"genre\",\n" +
-                        "          \"type\" : \"string\"\n" +
-                        "        }, {\n" +
-                        "          \"name\" : \"price\",\n" +
-                        "          \"type\" : [ \"null\", \"float\" ],\n" +
-                        "          \"default\" : null\n" +
-                        "        }, {\n" +
-                        "          \"name\" : \"pub_date\",\n" +
-                        "          \"type\" : {\n" +
-                        "            \"type\" : \"int\",\n" +
-                        "            \"connect.version\" : 1,\n" +
-                        "            \"connect.name\" : \"org.apache.kafka.connect.data.Date\",\n" +
-                        "            \"logicalType\" : \"date\"\n" +
-                        "          }\n" +
-                        "        }, {\n" +
-                        "          \"name\" : \"review\",\n" +
-                        "          \"type\" : \"string\"\n" +
-                        "        }, {\n" +
-                        "          \"name\" : \"id\",\n" +
-                        "          \"type\" : [ \"null\", \"string\" ],\n" +
-                        "          \"default\" : null\n" +
-                        "        } ],\n" +
-                        "        \"connect.name\" : \"de.deepshore.kafka.BookForm\"\n" +
-                        "      } ]\n" +
-                        "    } ],\n" +
-                        "    \"default\" : null\n" +
-                        "  } ],\n" +
-                        "  \"connect.name\" : \"de.deepshore.kafka.BooksForm\"\n" +
-                        "} ]",
-                result
+                "\"string\"",
+                result.getKeySchema()
+        );
+        assertEquals(
+                "{\"book\":[{\"pub_date\":\"2000-10-01\",\"author\":\"Writer\",\"price\":44.95,\"review\":\"An amazing story of nothing.\",\"genre\":\"Fiction\",\"id\":\"bk001\",\"title\":\"The First Book\"},{\"pub_date\":\"2000-10-01\",\"author\":\"Poet\",\"price\":24.95,\"review\":\"Least poetic poems.\",\"genre\":\"Poem\",\"id\":\"bk002\",\"title\":\"The Poet's First Poem\"}]}",
+                result.getValue()
+        );
+        assertEquals(
+                "[\"null\",{\"type\":\"record\",\"name\":\"BooksForm\",\"namespace\":\"de.deepshore.kafka\",\"fields\":[{\"name\":\"book\",\"type\":[\"null\",{\"type\":\"array\",\"items\":[\"null\",{\"type\":\"record\",\"name\":\"BookForm\",\"fields\":[{\"name\":\"author\",\"type\":\"string\"},{\"name\":\"title\",\"type\":\"string\"},{\"name\":\"genre\",\"type\":\"string\"},{\"name\":\"price\",\"type\":[\"null\",\"float\"],\"default\":null},{\"name\":\"pub_date\",\"type\":\"string\"},{\"name\":\"review\",\"type\":\"string\"},{\"name\":\"id\",\"type\":[\"null\",\"string\"],\"default\":null}],\"connect.name\":\"de.deepshore.kafka.BookForm\"}]}],\"default\":null}],\"connect.name\":\"de.deepshore.kafka.BooksForm\"}]",
+                result.getValueSchema()
         );
     }
 
@@ -120,15 +80,34 @@ class Xsd2avroControllerTest {
     }
 
     @Test
-    void testConvertNamespace() throws IOException {
-        final String body = Files.toString(new File("src/test/resources/testConvertNamespace.json"), StandardCharsets.UTF_8);
+    void testConvertNamespace(ObjectMapper objectMapper) throws IOException {
+        final String schema = Files.toString(new File("src/test/resources/testConvert/schema.xml"), StandardCharsets.UTF_8);
+        final String value = Files.toString(new File("src/test/resources/testConvert/value.xml"), StandardCharsets.UTF_8);
 
-        final String result = client.toBlocking().retrieve(HttpRequest.POST("/xsd2avro/connect/xsd", body), String.class);
+        XsdPack bodyObj = new XsdPack(schema, value);
+        bodyObj.setNamespace("de.mydomain.package");
+
+        final String result = client.toBlocking().retrieve(HttpRequest.POST("/xsd2avro/connect/xsd", objectMapper.writeValueAsString(bodyObj)), String.class);
 
         assertEquals(
-                "[\"null\",{\"type\":\"record\",\"name\":\"BooksForm\",\"namespace\":\"de.mydomain.package\",\"fields\":[{\"name\":\"book\",\"type\":[\"null\",{\"type\":\"array\",\"items\":[\"null\",{\"type\":\"record\",\"name\":\"BookForm\",\"fields\":[{\"name\":\"author\",\"type\":\"string\"},{\"name\":\"title\",\"type\":\"string\"},{\"name\":\"genre\",\"type\":\"string\"},{\"name\":\"price\",\"type\":[\"null\",\"float\"],\"default\":null},{\"name\":\"pub_date\",\"type\":{\"type\":\"int\",\"connect.version\":1,\"connect.name\":\"org.apache.kafka.connect.data.Date\",\"logicalType\":\"date\"}},{\"name\":\"review\",\"type\":\"string\"},{\"name\":\"id\",\"type\":[\"null\",\"string\"],\"default\":null}],\"connect.name\":\"de.mydomain.package.BookForm\"}]}],\"default\":null}],\"connect.name\":\"de.mydomain.package.BooksForm\"}]",
+                "{\"keySchema\":\"\\\"string\\\"\",\"valueSchema\":\"[\\\"null\\\",{\\\"type\\\":\\\"record\\\",\\\"name\\\":\\\"BooksForm\\\",\\\"namespace\\\":\\\"de.mydomain.package\\\",\\\"fields\\\":[{\\\"name\\\":\\\"book\\\",\\\"type\\\":[\\\"null\\\",{\\\"type\\\":\\\"array\\\",\\\"items\\\":[\\\"null\\\",{\\\"type\\\":\\\"record\\\",\\\"name\\\":\\\"BookForm\\\",\\\"fields\\\":[{\\\"name\\\":\\\"author\\\",\\\"type\\\":\\\"string\\\"},{\\\"name\\\":\\\"title\\\",\\\"type\\\":\\\"string\\\"},{\\\"name\\\":\\\"genre\\\",\\\"type\\\":\\\"string\\\"},{\\\"name\\\":\\\"price\\\",\\\"type\\\":[\\\"null\\\",\\\"float\\\"],\\\"default\\\":null},{\\\"name\\\":\\\"pub_date\\\",\\\"type\\\":\\\"string\\\"},{\\\"name\\\":\\\"review\\\",\\\"type\\\":\\\"string\\\"},{\\\"name\\\":\\\"id\\\",\\\"type\\\":[\\\"null\\\",\\\"string\\\"],\\\"default\\\":null}],\\\"connect.name\\\":\\\"de.mydomain.package.BookForm\\\"}]}],\\\"default\\\":null}],\\\"connect.name\\\":\\\"de.mydomain.package.BooksForm\\\"}]\",\"value\":\"{\\\"book\\\":[{\\\"pub_date\\\":\\\"2000-10-01\\\",\\\"author\\\":\\\"Writer\\\",\\\"price\\\":44.95,\\\"review\\\":\\\"An amazing story of nothing.\\\",\\\"genre\\\":\\\"Fiction\\\",\\\"id\\\":\\\"bk001\\\",\\\"title\\\":\\\"The First Book\\\"},{\\\"pub_date\\\":\\\"2000-10-01\\\",\\\"author\\\":\\\"Poet\\\",\\\"price\\\":24.95,\\\"review\\\":\\\"Least poetic poems.\\\",\\\"genre\\\":\\\"Poem\\\",\\\"id\\\":\\\"bk002\\\",\\\"title\\\":\\\"The Poet's First Poem\\\"}]}\"}",
                 result
         );
     }
 
+    @Test
+    void testXpathKey(ObjectMapper objectMapper) throws IOException {
+        final String schema = Files.toString(new File("src/test/resources/testConvert/schema.xml"), StandardCharsets.UTF_8);
+        final String value = Files.toString(new File("src/test/resources/testConvert/value.xml"), StandardCharsets.UTF_8);
+
+        XsdPack bodyObj = new XsdPack(schema, value);
+        bodyObj.setXpathRecordKey("//book[1]/author");
+
+        final AvroPack result = client.toBlocking().retrieve(HttpRequest.POST("/xsd2avro/connect/xsd", objectMapper.writeValueAsString(bodyObj)), AvroPack.class);
+
+        assertEquals(
+                "Writer",
+                result.getKey()
+        );
+    }
 }

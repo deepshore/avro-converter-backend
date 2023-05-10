@@ -5,16 +5,11 @@ import io.micronaut.core.annotation.Introspected;
 @Introspected
 public class XsdPack {
     private String namespace = "de.deepshore.kafka";
+    private String xpathRecordKey = "";
     private String xsd;
     private String xml;
 
     public XsdPack(String xsd, String xml) {
-        this.xsd = xsd;
-        this.xml = xml;
-    }
-
-    public XsdPack(String namespace, String xsd, String xml) {
-        this.namespace = namespace;
         this.xsd = xsd;
         this.xml = xml;
     }
@@ -41,5 +36,13 @@ public class XsdPack {
 
     public void setNamespace(String namespace) {
         this.namespace = namespace;
+    }
+
+    public String getXpathRecordKey() {
+        return xpathRecordKey;
+    }
+
+    public void setXpathRecordKey(String xpathRecordKey) {
+        this.xpathRecordKey = xpathRecordKey;
     }
 }
