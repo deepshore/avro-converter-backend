@@ -8,17 +8,20 @@ import io.confluent.connect.avro.AvroData;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.*;
+import io.micronaut.http.server.types.files.StreamedFile;
 import org.apache.kafka.connect.connector.ConnectRecord;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import static de.deepshore.kafka.Xsd2AvroUtil.getDummySinkRecord;
 
@@ -113,4 +116,88 @@ public class Xsd2avroController {
         }
 
     }
+
+    @Post(uri = "/connect/java")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    public HttpResponse getJava(@Body XsdPack xsdpack) {
+        File xsdFile;
+
+        if(!xsdpack.getXsd().startsWith("<?xml") && !xsdpack.getXsd().startsWith("<xsd")){
+            return HttpResponse.unprocessableEntity();
+        }
+        if(!xsdpack.getXml().startsWith("<?xml")){
+            return HttpResponse.unprocessableEntity();
+        }
+
+        try {
+            xsdFile = File.createTempFile("xsd", String.valueOf(LocalDateTime.now()));
+            Files.write(xsdpack.getXsd().getBytes(StandardCharsets.UTF_8), xsdFile);
+        } catch (IOException e) {
+            LOG.error("Error while creating temporary File for XSD", e);
+            return HttpResponse.serverError();
+        }
+
+        try(FromXml.Value transform = new FromXml.Value()) {
+
+
+            Map<String, String> transformConfig;
+
+            if("".equals(xsdpack.getXpathRecordKey())){
+                transformConfig = Map.of(
+                        SCHEMA_PATH_CONFIG, xsdFile.getAbsoluteFile().toURL().toString(),
+                        XJC_OPTIONS_STRICT_CHECK_CONFIG, XJC_OPTIONS_STRICT_CHECK_CONFIG_VALUE,
+                        PACKAGE_CONFIG, this.getClass().getPackageName()
+                );
+
+            } else {
+                transformConfig = Map.of(
+                        SCHEMA_PATH_CONFIG, xsdFile.getAbsoluteFile().toURL().toString(),
+                        XJC_OPTIONS_STRICT_CHECK_CONFIG, XJC_OPTIONS_STRICT_CHECK_CONFIG_VALUE,
+                        PACKAGE_CONFIG, this.getClass().getPackageName(),
+                        XPATH_FOR_RECORD_KEY, xsdpack.getXpathRecordKey()
+                );
+            }
+
+            transform.configure(transformConfig);
+
+            File tempFile = File.createTempFile("compressed-java", String.valueOf(LocalDateTime.now()));
+
+            try(final FileOutputStream fos = new FileOutputStream(tempFile);
+                ZipOutputStream zipOut = new ZipOutputStream(fos)) {
+                List<File> generatedSourceFiles = transform.getGeneratedSourceFiles();
+
+                generatedSourceFiles.forEach(srcFile -> {
+                    try(FileInputStream fis = new FileInputStream(srcFile)) {
+                        final ZipEntry zipEntry = new ZipEntry(srcFile.getName());
+                        zipOut.putNextEntry(zipEntry);
+                        byte[] bytes = new byte[1024];
+                        int length;
+                        while((length = fis.read(bytes)) >= 0) {
+                            zipOut.write(bytes, 0, length);
+                        }
+                    } catch (IOException e) {
+                        LOG.warn("Error zipping", e);
+                        return;
+                    }
+                });
+
+
+                return HttpResponse.ok(new StreamedFile(new FileInputStream(tempFile), new MediaType(MediaType.APPLICATION_OCTET_STREAM)))
+                        .header("Content-type", "application/octet-stream")
+                        .header("Content-disposition", "attachment; filename=\"java.zip\"");
+            }
+        } catch (IOException ioe) {
+            LOG.info("Error while converting java files to zip", ioe);
+            return HttpResponse.ok(String.format("Error while converting java files to zip: %s", ioe.getLocalizedMessage()));
+        } catch (NullPointerException npe) {
+            LOG.info("Error while converting XSD to AVRO", npe);
+            return HttpResponse.ok(String.format("Error while converting XSD to AVRO: %s", npe.getLocalizedMessage()));
+        } catch (Exception e) {
+            LOG.info("Error while converting XSD to AVRO", e.getStackTrace());
+            return HttpResponse.ok(String.format("Error while converting XSD to AVRO: %s", e.getLocalizedMessage()));
+        }
+
+    }
+
 }

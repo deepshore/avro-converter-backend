@@ -13,9 +13,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -109,5 +116,33 @@ class Xsd2avroControllerTest {
                 "Writer",
                 result.getKey()
         );
+    }
+
+    @Test
+    void testZipWithJava(ObjectMapper objectMapper) throws IOException {
+        final String schema = Files.toString(new File("src/test/resources/testConvert/schema.xml"), StandardCharsets.UTF_8);
+        final String value = Files.toString(new File("src/test/resources/testConvert/value.xml"), StandardCharsets.UTF_8);
+
+        XsdPack bodyObj = new XsdPack(schema, value);
+        bodyObj.setXpathRecordKey("//book[1]/author");
+
+
+        final byte[] result = client.toBlocking().retrieve(HttpRequest.POST("/xsd2avro/connect/java", objectMapper.writeValueAsString(bodyObj)), byte[].class);
+
+        ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(result));
+        ZipEntry zipEntry = zis.getNextEntry();
+
+        List<String> fileNames = new ArrayList<>();
+
+        while (zipEntry != null) {
+            fileNames.add(zipEntry.getName());
+            zipEntry = zis.getNextEntry();
+        }
+
+        zis.closeEntry();
+        zis.close();
+        
+        assertEquals(4, fileNames.size());
+        assertEquals(Arrays.asList("BookForm.java", "BooksForm.java", "ObjectFactory.java", "package-info.java"), fileNames);
     }
 }
