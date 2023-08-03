@@ -33,6 +33,9 @@ public class Xsd2avroController {
     public static final String XJC_OPTIONS_STRICT_CHECK_CONFIG = "xjc.options.strict.check.enabled";
     public static final String XJC_OPTIONS_STRICT_CHECK_CONFIG_VALUE = "false";
     private static final Logger LOG = LoggerFactory.getLogger(Xsd2avroController.class);
+    public static final String ERROR_WHILE_CONVERTING_XSD_TO_AVRO = "Error while converting XSD to AVRO";
+    public static final String ERROR_WHILE_CONVERTING_XSD_TO_AVRO_S = "Error while converting XSD to AVRO: %s";
+    public static final String PREFIX = "<?xml";
 
     @Get(produces = "plain/text")
     public String status() {
@@ -45,10 +48,10 @@ public class Xsd2avroController {
     public HttpResponse convert(@Body XsdPack xsdpack) {
         File xsdFile;
 
-        if(!xsdpack.getXsd().startsWith("<?xml") && !xsdpack.getXsd().startsWith("<xsd")){
+        if(!xsdpack.getXsd().startsWith(PREFIX) && !xsdpack.getXsd().startsWith("<xsd")){
             return HttpResponse.ok("Please provide a valid xml schema.");
         }
-        if(!xsdpack.getXml().startsWith("<?xml")){
+        if(!xsdpack.getXml().startsWith(PREFIX)){
             return HttpResponse.ok("Please provide a valid xml file.");
         }
 
@@ -108,11 +111,11 @@ public class Xsd2avroController {
             return HttpResponse.ok(ap);
 
         } catch (NullPointerException npe) {
-            LOG.info("Error while converting XSD to AVRO", npe);
-            return HttpResponse.ok(String.format("Error while converting XSD to AVRO: %s", npe.getLocalizedMessage()));
+            LOG.info(ERROR_WHILE_CONVERTING_XSD_TO_AVRO, npe);
+            return HttpResponse.ok(String.format(ERROR_WHILE_CONVERTING_XSD_TO_AVRO_S, npe.getLocalizedMessage()));
         } catch (Exception e) {
-            LOG.info("Error while converting XSD to AVRO", e.getStackTrace());
-            return HttpResponse.ok(String.format("Error while converting XSD to AVRO: %s", e.getLocalizedMessage()));
+            LOG.info(ERROR_WHILE_CONVERTING_XSD_TO_AVRO, e);
+            return HttpResponse.ok(String.format(ERROR_WHILE_CONVERTING_XSD_TO_AVRO_S, e.getLocalizedMessage()));
         }
 
     }
@@ -123,10 +126,10 @@ public class Xsd2avroController {
     public HttpResponse getJava(@Body XsdPack xsdpack) {
         File xsdFile;
 
-        if(!xsdpack.getXsd().startsWith("<?xml") && !xsdpack.getXsd().startsWith("<xsd")){
+        if(!xsdpack.getXsd().startsWith(PREFIX) && !xsdpack.getXsd().startsWith("<xsd")){
             return HttpResponse.unprocessableEntity();
         }
-        if(!xsdpack.getXml().startsWith("<?xml")){
+        if(!xsdpack.getXml().startsWith(PREFIX)){
             return HttpResponse.unprocessableEntity();
         }
 
@@ -191,11 +194,11 @@ public class Xsd2avroController {
             LOG.info("Error while converting java files to zip", ioe);
             return HttpResponse.ok(String.format("Error while converting java files to zip: %s", ioe.getLocalizedMessage()));
         } catch (NullPointerException npe) {
-            LOG.info("Error while converting XSD to AVRO", npe);
-            return HttpResponse.ok(String.format("Error while converting XSD to AVRO: %s", npe.getLocalizedMessage()));
+            LOG.info(ERROR_WHILE_CONVERTING_XSD_TO_AVRO, npe);
+            return HttpResponse.ok(String.format(ERROR_WHILE_CONVERTING_XSD_TO_AVRO_S, npe.getLocalizedMessage()));
         } catch (Exception e) {
-            LOG.info("Error while converting XSD to AVRO", e.getStackTrace());
-            return HttpResponse.ok(String.format("Error while converting XSD to AVRO: %s", e.getLocalizedMessage()));
+            LOG.info(ERROR_WHILE_CONVERTING_XSD_TO_AVRO, e);
+            return HttpResponse.ok(String.format(ERROR_WHILE_CONVERTING_XSD_TO_AVRO_S, e.getLocalizedMessage()));
         }
 
     }
