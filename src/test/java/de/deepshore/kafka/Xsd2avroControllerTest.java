@@ -24,6 +24,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @MicronautTest
@@ -143,6 +144,6 @@ class Xsd2avroControllerTest {
         zis.close();
         
         assertEquals(4, fileNames.size());
-        assertEquals(Arrays.asList("BookForm.java", "BooksForm.java", "ObjectFactory.java", "package-info.java"), fileNames);
+        assertThat(fileNames).contains("BookForm.java", "BooksForm.java", "ObjectFactory.java", "package-info.java");
     }
 }
