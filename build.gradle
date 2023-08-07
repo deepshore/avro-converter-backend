@@ -31,7 +31,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.jcustenborder.kafka.connect:kafka-connect-transform-xml:0.1.5-SNAPSHOT")
+    implementation("com.github.jcustenborder.kafka.connect:kafka-connect-transform-xml:0.1.5.0")
     implementation 'io.confluent:kafka-connect-avro-converter:7.4.0'
 
     annotationProcessor("io.micronaut:micronaut-http-validation")
