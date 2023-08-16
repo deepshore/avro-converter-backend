@@ -187,7 +187,7 @@ public class Xsd2avroController {
 
 
                 return HttpResponse.ok(new StreamedFile(new FileInputStream(tempFile), new MediaType(MediaType.APPLICATION_OCTET_STREAM)))
-                        .header("Content-type", "application/octet-stream")
+                        .header("Content-type", MediaType.APPLICATION_OCTET_STREAM)
                         .header("Content-disposition", "attachment; filename=\"java.zip\"");
             }
         } catch (IOException ioe) {
