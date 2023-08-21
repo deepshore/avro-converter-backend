@@ -22,12 +22,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.StreamSupport;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -57,7 +54,9 @@ class Xsd2avroControllerTest {
         final String schema = Files.toString(new File("src/test/resources/testConvert/schema.xml"), StandardCharsets.UTF_8);
         final String value = Files.toString(new File("src/test/resources/testConvert/value.xml"), StandardCharsets.UTF_8);
 
-        XsdPack bodyObj = new XsdPack(schema, value);
+        XsdPack bodyObj = new XsdPack();
+        bodyObj.setXsd(schema);
+        bodyObj.setXml(value);
 
         final AvroPack result = client.toBlocking().retrieve(HttpRequest.POST("/xsd2avro/connect/xsd", objectMapper.writeValueAsString(bodyObj)), AvroPack.class);
 
@@ -81,11 +80,10 @@ class Xsd2avroControllerTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "testConvertFailure.json| [{\"message\":\"xsdpack.xml: XML must start with <?xml tag\"},{\"message\":\"xsdpack.xsd: XSD must start with <xsd or <?xml tag\"}]",
             "testConvertInvalidInput.json| [{\"message\":\"xsdpack.xml: XML must start with <?xml tag\"},{\"message\":\"xsdpack.xsd: XSD must start with <xsd or <?xml tag\"}]",
-            "testConvertInvalidInputPartial.json| [{\"message\":\"xsdpack.xml: XML must start with <?xml tag\"},{\"message\":\"xsdpack.xsd: XSD must start with <xsd or <?xml tag\"}]",
+            "testConvertInvalidInputPartial.json| [{\"message\":\"xsdpack.xml: XML must start with <?xml tag\"}]",
     }, delimiterString = "|")
-    void testConvertErrorInvalidInputs(String input, String expected) throws IOException {
+    void testInvalidInputs(String input, String expected) throws IOException {
         final String body = Files.toString(new File(String.format("src/test/resources/%s", input)), StandardCharsets.UTF_8);
 
         HttpClientResponseException e = assertThrows(HttpClientResponseException.class, () -> {
@@ -108,12 +106,38 @@ class Xsd2avroControllerTest {
         );
     }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            "testConvertFailure.json| Error while converting XSD to AVRO: Illegal character in: bo-ok",
+    }, delimiterString = "|")
+    void testConvertError(String input, String expected) throws IOException {
+        final String body = Files.toString(new File(String.format("src/test/resources/%s", input)), StandardCharsets.UTF_8);
+
+        HttpClientResponseException e = assertThrows(HttpClientResponseException.class, () -> {
+            client.toBlocking().retrieve(HttpRequest.POST("/xsd2avro/connect/xsd", body), String.class);
+        });
+        HttpResponse<?> response = e.getResponse();
+
+
+        assertEquals(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                response.getStatus()
+        );
+
+        assertEquals(
+                expected,
+                response.body()
+        );
+    }
+
     @Test
     void testConvertNamespace(ObjectMapper objectMapper) throws IOException {
         final String schema = Files.toString(new File("src/test/resources/testConvert/schema.xml"), StandardCharsets.UTF_8);
         final String value = Files.toString(new File("src/test/resources/testConvert/value.xml"), StandardCharsets.UTF_8);
 
-        XsdPack bodyObj = new XsdPack(schema, value);
+        XsdPack bodyObj = new XsdPack();
+        bodyObj.setXsd(schema);
+        bodyObj.setXml(value);
         bodyObj.setNamespace("de.mydomain.package");
 
         final String result = client.toBlocking().retrieve(HttpRequest.POST("/xsd2avro/connect/xsd", objectMapper.writeValueAsString(bodyObj)), String.class);
@@ -129,7 +153,9 @@ class Xsd2avroControllerTest {
         final String schema = Files.toString(new File("src/test/resources/testConvert/schema.xml"), StandardCharsets.UTF_8);
         final String value = Files.toString(new File("src/test/resources/testConvert/value.xml"), StandardCharsets.UTF_8);
 
-        XsdPack bodyObj = new XsdPack(schema, value);
+        XsdPack bodyObj = new XsdPack();
+        bodyObj.setXsd(schema);
+        bodyObj.setXml(value);
         bodyObj.setXpathRecordKey("//book[1]/author");
 
         final AvroPack result = client.toBlocking().retrieve(HttpRequest.POST("/xsd2avro/connect/xsd", objectMapper.writeValueAsString(bodyObj)), AvroPack.class);
@@ -145,7 +171,9 @@ class Xsd2avroControllerTest {
         final String schema = Files.toString(new File("src/test/resources/testConvert/schema.xml"), StandardCharsets.UTF_8);
         final String value = Files.toString(new File("src/test/resources/testConvert/value.xml"), StandardCharsets.UTF_8);
 
-        XsdPack bodyObj = new XsdPack(schema, value);
+        XsdPack bodyObj = new XsdPack();
+        bodyObj.setXsd(schema);
+        bodyObj.setXml(value);
         bodyObj.setXpathRecordKey("//book[1]/author");
 
 

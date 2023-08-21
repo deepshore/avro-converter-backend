@@ -76,10 +76,10 @@ public class Xsd2avroController {
 
         } catch (NullPointerException npe) {
             LOG.info(ERROR_WHILE_CONVERTING_XSD_TO_AVRO, npe);
-            return HttpResponse.ok(String.format(ERROR_WHILE_CONVERTING_XSD_TO_AVRO_S, npe.getLocalizedMessage()));
+            return HttpResponse.serverError(String.format(ERROR_WHILE_CONVERTING_XSD_TO_AVRO_S, npe.getLocalizedMessage()));
         } catch (Exception e) {
             LOG.info(ERROR_WHILE_CONVERTING_XSD_TO_AVRO, e);
-            return HttpResponse.ok(String.format(ERROR_WHILE_CONVERTING_XSD_TO_AVRO_S, e.getLocalizedMessage()));
+            return HttpResponse.serverError(String.format(ERROR_WHILE_CONVERTING_XSD_TO_AVRO_S, e.getLocalizedMessage()));
         }
 
     }
@@ -123,13 +123,13 @@ public class Xsd2avroController {
             }
         } catch (IOException ioe) {
             LOG.info("Error while converting java files to zip", ioe);
-            return HttpResponse.ok(String.format("Error while converting java files to zip: %s", ioe.getLocalizedMessage()));
+            return HttpResponse.serverError(String.format("Error while converting java files to zip: %s", ioe.getLocalizedMessage()));
         } catch (NullPointerException npe) {
             LOG.info(ERROR_WHILE_CONVERTING_XSD_TO_AVRO, npe);
-            return HttpResponse.ok(String.format(ERROR_WHILE_CONVERTING_XSD_TO_AVRO_S, npe.getLocalizedMessage()));
+            return HttpResponse.serverError(String.format(ERROR_WHILE_CONVERTING_XSD_TO_AVRO_S, npe.getLocalizedMessage()));
         } catch (Exception e) {
             LOG.info(ERROR_WHILE_CONVERTING_XSD_TO_AVRO, e);
-            return HttpResponse.ok(String.format(ERROR_WHILE_CONVERTING_XSD_TO_AVRO_S, e.getLocalizedMessage()));
+            return HttpResponse.serverError(String.format(ERROR_WHILE_CONVERTING_XSD_TO_AVRO_S, e.getLocalizedMessage()));
         }
 
     }

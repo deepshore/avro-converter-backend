@@ -2,21 +2,18 @@ package de.deepshore.kafka.models;
 
 import io.micronaut.core.annotation.Introspected;
 
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 
 @Introspected
 public class    XsdPack {
+    @NotBlank
     private String namespace = "de.deepshore.kafka";
     private String xpathRecordKey = "";
-    @Pattern(regexp = "^<(xsd|\\?xml).*$", message = "XSD must start with <xsd or <?xml tag", flags = Pattern.Flag.CASE_INSENSITIVE)
+    @Pattern(regexp = "^<(xsd|\\?xml).*$", message = "XSD must start with <xsd or <?xml tag", flags = Pattern.Flag.DOTALL)
     private String xsd;
-    @Pattern(regexp = "^<\\?xml.*$", message = "XML must start with <?xml tag", flags = Pattern.Flag.CASE_INSENSITIVE)
+    @Pattern(regexp = "^<\\?xml.*$", message = "XML must start with <?xml tag", flags = Pattern.Flag.DOTALL)
     private String xml;
-
-    public XsdPack(String xsd, String xml) {
-        this.xsd = xsd;
-        this.xml = xml;
-    }
 
     public String getXsd() {
         return xsd;
