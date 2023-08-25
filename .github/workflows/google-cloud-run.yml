@@ -3,8 +3,7 @@ on: [push, pull_request]
 
 env:
   GCLOUD_PROJECT_ID: ${{ secrets.GCLOUD_PROJECT_ID }}
-  APPLICATION_NAME: xsd2avro
-  GCLOUD_IMAGE_REPOSITORY: xsd2avro
+  GCLOUD_IMAGE_REPOSITORY: europe-west3-docker.pkg.dev/xml2avro/xml2avro
   GCLOUD_REGION: europe-west3
   GCLOUD_GCR: eu.gcr.io
   GCLOUD_PKG_LOCATION: europe-west3-docker.pkg.dev
@@ -56,12 +55,12 @@ jobs:
           GH_DEPLOY_USERNAME: ${{ env.GITHUB_REPOSITORY_OWNER }}
           GH_DEPLOY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          export DOCKER_IMAGE=${{ env.GCLOUD_PKG_LOCATION }}/${{ env.GCLOUD_PROJECT_ID }}/${{ env.GCLOUD_IMAGE_REPOSITORY }}/${{ env.APPLICATION_NAME }}:${{ github.sha }}
+          export DOCKER_IMAGE=${{ env.GCLOUD_IMAGE_REPOSITORY }}:${{ github.sha }}
           ./gradlew check assembleDist dockerPush --no-daemon
       - name: Deploy Cloud Run
         if: ${{ (github.ref == 'refs/heads/main') || (startsWith(github.ref, 'refs/tags/')) }}
         run: |
-          export DOCKER_IMAGE="${{ env.GCLOUD_PKG_LOCATION }}/${{ env.GCLOUD_PROJECT_ID }}/${{ env.GCLOUD_IMAGE_REPOSITORY }}/${{ env.APPLICATION_NAME }}:${{ github.sha }}"
+          export DOCKER_IMAGE="${{ env.GCLOUD_IMAGE_REPOSITORY }}:${{ github.sha }}"
           gcloud run deploy xsd2avro --quiet \
             --image "${DOCKER_IMAGE}" --project "${GCLOUD_PROJECT_ID}" \
             --memory "1Gi" \
