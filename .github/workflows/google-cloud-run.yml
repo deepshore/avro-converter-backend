@@ -60,7 +60,7 @@ jobs:
         if: ${{ (github.ref == 'refs/heads/main') || (startsWith(github.ref, 'refs/tags/')) }}
         run: |
           gcloud run deploy xsd2avro --quiet \
-            --image "${DOCKER_IMAGE}" --project "${GCLOUD_PROJECT_ID}" \
+            --image "${GCLOUD_IMAGE_REPOSITORY}:latest" --project "${GCLOUD_PROJECT_ID}" \
             --memory "1Gi" \
             --region "${GCLOUD_REGION}" --platform managed --allow-unauthenticated --format json
           echo "Invoke endpoint:"
