@@ -74,8 +74,6 @@ public class Xsd2avroController {
 
             return HttpResponse.ok(ap);
 
-        } catch (NullPointerException npe) {
-            return logAndReturnServerError(npe);
         } catch (Exception e) {
             return logAndReturnServerError(e);
         }
@@ -122,8 +120,6 @@ public class Xsd2avroController {
         } catch (IOException ioe) {
             LOG.info("Error while converting java files to zip", ioe);
             return HttpResponse.serverError(String.format("Error while converting java files to zip: %s", ioe.getLocalizedMessage()));
-        } catch (NullPointerException npe) {
-            return logAndReturnServerError(npe);
         } catch (Exception e) {
             return logAndReturnServerError(e);
         }
