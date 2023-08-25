@@ -52,7 +52,6 @@ jobs:
       - name: Build And Push Docker Image
         if: ${{ (github.ref == 'refs/heads/main') || (startsWith(github.ref, 'refs/tags/')) }}
         env:
-          GCLOUD_IMAGE_REPOSITORY: ${{ secrets.GCLOUD_IMAGE_REPOSITORY }}
           TESTCONTAINERS_RYUK_DISABLED: true
           GH_DEPLOY_USERNAME: ${{ env.GITHUB_REPOSITORY_OWNER }}
           GH_DEPLOY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
