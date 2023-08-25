@@ -3,7 +3,7 @@ on: [push, pull_request]
 
 env:
   GCLOUD_PROJECT_ID: ${{ secrets.GCLOUD_PROJECT_ID }}
-  GCLOUD_IMAGE_REPOSITORY: europe-west3-docker.pkg.dev/xml2avro/xml2avro
+  GCLOUD_IMAGE_REPOSITORY: europe-west3-docker.pkg.dev/${{ secrets.GCLOUD_PROJECT_ID }}/xml2avro/xml2avro
   GCLOUD_REGION: europe-west3
   GCLOUD_GCR: eu.gcr.io
   GCLOUD_PKG_LOCATION: europe-west3-docker.pkg.dev
