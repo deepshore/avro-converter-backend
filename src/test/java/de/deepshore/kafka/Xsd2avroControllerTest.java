@@ -1,29 +1,43 @@
 package de.deepshore.kafka;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Files;
 import de.deepshore.kafka.models.AvroPack;
 import de.deepshore.kafka.models.XsdPack;
 import io.micronaut.http.HttpRequest;
+import io.micronaut.http.HttpResponse;
+import io.micronaut.http.HttpStatus;
 import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
+import io.micronaut.http.client.exceptions.HttpClientResponseException;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @MicronautTest
 class Xsd2avroControllerTest {
     @Inject
     @Client("/")
     HttpClient client;
+
+    @Inject
+    ObjectMapper objectMapper;
 
     @Test
     void testHello() {
@@ -40,7 +54,9 @@ class Xsd2avroControllerTest {
         final String schema = Files.toString(new File("src/test/resources/testConvert/schema.xml"), StandardCharsets.UTF_8);
         final String value = Files.toString(new File("src/test/resources/testConvert/value.xml"), StandardCharsets.UTF_8);
 
-        XsdPack bodyObj = new XsdPack(schema, value);
+        XsdPack bodyObj = new XsdPack();
+        bodyObj.setXsd(schema);
+        bodyObj.setXml(value);
 
         final AvroPack result = client.toBlocking().retrieve(HttpRequest.POST("/xsd2avro/connect/xsd", objectMapper.writeValueAsString(bodyObj)), AvroPack.class);
 
@@ -63,19 +79,54 @@ class Xsd2avroControllerTest {
     }
 
     @ParameterizedTest
-    @CsvSource({
-            "testConvertFailure.json, Error while converting XSD to AVRO: Illegal character in: bo-ok",
-            "testConvertInvalidInput.json, Please provide a valid xml schema.",
-            "testConvertInvalidInputPartial.json, Please provide a valid xml file.",
-    })
-    void testConvertErrorInvalidInputs(String input, String expected) throws IOException {
+    @CsvSource(value = {
+            "testConvertInvalidInput.json| [{\"message\":\"xsdpack.xml: XML must start with <?xml tag\"},{\"message\":\"xsdpack.xsd: XSD must start with <xsd or <?xml tag\"}]",
+            "testConvertInvalidInputPartial.json| [{\"message\":\"xsdpack.xml: XML must start with <?xml tag\"}]",
+    }, delimiterString = "|")
+    void testInvalidInputs(String input, String expected) throws IOException {
         final String body = Files.toString(new File(String.format("src/test/resources/%s", input)), StandardCharsets.UTF_8);
 
-        final String result = client.toBlocking().retrieve(HttpRequest.POST("/xsd2avro/connect/xsd", body), String.class);
+        HttpClientResponseException e = assertThrows(HttpClientResponseException.class, () -> {
+         client.toBlocking().retrieve(HttpRequest.POST("/xsd2avro/connect/xsd", body), String.class);
+        });
+        HttpResponse<?> response = e.getResponse();
+
+
+        assertEquals(
+                HttpStatus.BAD_REQUEST,
+                response.getStatus()
+        );
+        JsonNode badRequestResponse = objectMapper.readValue(response.body().toString(), JsonNode.class);
+
+        String errorsFromResponse = badRequestResponse.get("_embedded").get("errors").toString();
 
         assertEquals(
                 expected,
-                result
+                errorsFromResponse
+        );
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "testConvertFailure.json| Error while converting XSD to AVRO: Illegal character in: bo-ok",
+    }, delimiterString = "|")
+    void testConvertError(String input, String expected) throws IOException {
+        final String body = Files.toString(new File(String.format("src/test/resources/%s", input)), StandardCharsets.UTF_8);
+
+        HttpClientResponseException e = assertThrows(HttpClientResponseException.class, () -> {
+            client.toBlocking().retrieve(HttpRequest.POST("/xsd2avro/connect/xsd", body), String.class);
+        });
+        HttpResponse<?> response = e.getResponse();
+
+
+        assertEquals(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                response.getStatus()
+        );
+
+        assertEquals(
+                expected,
+                response.body()
         );
     }
 
@@ -84,7 +135,9 @@ class Xsd2avroControllerTest {
         final String schema = Files.toString(new File("src/test/resources/testConvert/schema.xml"), StandardCharsets.UTF_8);
         final String value = Files.toString(new File("src/test/resources/testConvert/value.xml"), StandardCharsets.UTF_8);
 
-        XsdPack bodyObj = new XsdPack(schema, value);
+        XsdPack bodyObj = new XsdPack();
+        bodyObj.setXsd(schema);
+        bodyObj.setXml(value);
         bodyObj.setNamespace("de.mydomain.package");
 
         final String result = client.toBlocking().retrieve(HttpRequest.POST("/xsd2avro/connect/xsd", objectMapper.writeValueAsString(bodyObj)), String.class);
@@ -100,7 +153,9 @@ class Xsd2avroControllerTest {
         final String schema = Files.toString(new File("src/test/resources/testConvert/schema.xml"), StandardCharsets.UTF_8);
         final String value = Files.toString(new File("src/test/resources/testConvert/value.xml"), StandardCharsets.UTF_8);
 
-        XsdPack bodyObj = new XsdPack(schema, value);
+        XsdPack bodyObj = new XsdPack();
+        bodyObj.setXsd(schema);
+        bodyObj.setXml(value);
         bodyObj.setXpathRecordKey("//book[1]/author");
 
         final AvroPack result = client.toBlocking().retrieve(HttpRequest.POST("/xsd2avro/connect/xsd", objectMapper.writeValueAsString(bodyObj)), AvroPack.class);
@@ -109,5 +164,35 @@ class Xsd2avroControllerTest {
                 "Writer",
                 result.getKey()
         );
+    }
+
+    @Test
+    void testZipWithJava(ObjectMapper objectMapper) throws IOException {
+        final String schema = Files.toString(new File("src/test/resources/testConvert/schema.xml"), StandardCharsets.UTF_8);
+        final String value = Files.toString(new File("src/test/resources/testConvert/value.xml"), StandardCharsets.UTF_8);
+
+        XsdPack bodyObj = new XsdPack();
+        bodyObj.setXsd(schema);
+        bodyObj.setXml(value);
+        bodyObj.setXpathRecordKey("//book[1]/author");
+
+
+        final byte[] result = client.toBlocking().retrieve(HttpRequest.POST("/xsd2avro/connect/java", objectMapper.writeValueAsString(bodyObj)), byte[].class);
+
+        ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(result));
+        ZipEntry zipEntry = zis.getNextEntry();
+
+        List<String> fileNames = new ArrayList<>();
+
+        while (zipEntry != null) {
+            fileNames.add(zipEntry.getName());
+            zipEntry = zis.getNextEntry();
+        }
+
+        zis.closeEntry();
+        zis.close();
+        
+        assertEquals(4, fileNames.size());
+        assertThat(fileNames).contains("BookForm.java", "BooksForm.java", "ObjectFactory.java", "package-info.java");
     }
 }
