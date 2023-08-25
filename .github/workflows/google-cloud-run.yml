@@ -55,12 +55,10 @@ jobs:
           GH_DEPLOY_USERNAME: ${{ env.GITHUB_REPOSITORY_OWNER }}
           GH_DEPLOY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          export DOCKER_IMAGE=${{ env.GCLOUD_IMAGE_REPOSITORY }}:${{ github.sha }}
           ./gradlew check assembleDist dockerPush --no-daemon
       - name: Deploy Cloud Run
         if: ${{ (github.ref == 'refs/heads/main') || (startsWith(github.ref, 'refs/tags/')) }}
         run: |
-          export DOCKER_IMAGE="${{ env.GCLOUD_IMAGE_REPOSITORY }}:${{ github.sha }}"
           gcloud run deploy xsd2avro --quiet \
             --image "${DOCKER_IMAGE}" --project "${GCLOUD_PROJECT_ID}" \
             --memory "1Gi" \

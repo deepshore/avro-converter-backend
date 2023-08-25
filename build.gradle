@@ -3,6 +3,10 @@ plugins {
     id("io.micronaut.application") version "3.7.10"
 }
 
+def static getCheckedOutGitCommitHash() {
+    'git rev-parse --verify --short HEAD'.execute().text.trim()
+}
+
 version = "0.1"
 group = "de.deepshore.kafka"
 
@@ -65,11 +69,14 @@ tasks {
         baseImage = "azul/zulu-openjdk-alpine:11"
     }
     dockerBuild {
-        images = ["${System.env.DOCKER_IMAGE ?: project.name}:$project.version"]
+        images = ["${System.env.GCLOUD_IMAGE_REPOSITORY ?: project.name}:$project.version",
+                  "${System.env.GCLOUD_IMAGE_REPOSITORY ?: project.name}:latest",
+                  "${System.env.GCLOUD_IMAGE_REPOSITORY ?: project.name}:${getCheckedOutGitCommitHash()}"]
     }
-
     dockerBuildNative {
-        images = ["${System.env.DOCKER_IMAGE ?: project.name}:$project.version"]
+        images = ["${System.env.GCLOUD_IMAGE_REPOSITORY ?: project.name}:$project.version",
+                  "${System.env.GCLOUD_IMAGE_REPOSITORY ?: project.name}:latest",
+                  "${System.env.GCLOUD_IMAGE_REPOSITORY ?: project.name}:${getCheckedOutGitCommitHash()}"]
     }
 }
 graalvmNative.toolchainDetection = false
