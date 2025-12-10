@@ -1,6 +1,6 @@
 plugins {
-    id("com.github.johnrengelman.shadow") version "7.1.2"
-    id("io.micronaut.application") version "3.7.10"
+    id("com.gradleup.shadow") version "8.3.5"
+    id("io.micronaut.application") version "4.6.1"
 }
 
 def static getCheckedOutGitCommitHash() {
@@ -12,22 +12,6 @@ group = "de.deepshore.kafka"
 
 repositories {
     maven {
-        name = "deepshore/kafka-connect-transform-xml"
-        url = uri("https://maven.pkg.github.com/deepshore/kafka-connect-transform-xml")
-        credentials {
-            username = project.findProperty("gpr.user") ?: System.getenv("GH_DEPLOY_USERNAME")
-            password = project.findProperty("gpr.key") ?: System.getenv("GH_DEPLOY_TOKEN")
-        }
-    }
-    maven {
-        name = "deepshore/xjc-kafka-connect-plugin"
-        url = uri("https://maven.pkg.github.com/deepshore/xjc-kafka-connect-plugin")
-        credentials {
-            username = project.findProperty("gpr.user") ?: System.getenv("GH_DEPLOY_USERNAME")
-            password = project.findProperty("gpr.key") ?: System.getenv("GH_DEPLOY_TOKEN")
-        }
-    }
-    maven {
         name = "confluent"
         url = uri("https://packages.confluent.io/maven/")
     }
@@ -35,18 +19,20 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.jcustenborder.kafka.connect:kafka-connect-transform-xml:0.1.5.0")
+    implementation("io.github.deepshore.kafka.connect:kafka-connect-transform-xml:0.1.5.5")
     implementation 'io.confluent:kafka-connect-avro-converter:7.4.0'
 
     annotationProcessor("io.micronaut:micronaut-http-validation")
     annotationProcessor("io.micronaut.openapi:micronaut-openapi")
+    annotationProcessor("io.micronaut.validation:micronaut-validation-processor")
     implementation("io.micronaut:micronaut-http-client")
     implementation("io.micronaut:micronaut-jackson-databind")
     implementation("io.micronaut:micronaut-runtime")
     implementation("io.swagger.core.v3:swagger-annotations")
     implementation("jakarta.annotation:jakarta.annotation-api")
+    implementation("jakarta.validation:jakarta.validation-api")
     runtimeOnly("ch.qos.logback:logback-classic")
-    implementation("io.micronaut:micronaut-validation")
+    implementation("io.micronaut.validation:micronaut-validation")
     implementation("com.github.jcustenborder.kafka.connect:kafka-connect-parent:2.8.0-1")
     testImplementation('org.junit.jupiter:junit-jupiter-params:5.9.0')
     testImplementation('org.assertj:assertj-core:3.24.2')
@@ -60,13 +46,13 @@ application {
     mainClass.set("de.deepshore.kafka.Application")
 }
 java {
-    sourceCompatibility = JavaVersion.toVersion("11")
-    targetCompatibility = JavaVersion.toVersion("11")
+    sourceCompatibility = JavaVersion.toVersion("21")
+    targetCompatibility = JavaVersion.toVersion("21")
 }
 
 tasks {
     dockerfile {
-        baseImage = "azul/zulu-openjdk-alpine:11"
+        baseImage = "azul/zulu-openjdk-alpine:21"
     }
     dockerBuild {
         images = ["${System.env.GCLOUD_IMAGE_REPOSITORY ?: project.name}:$project.version",
@@ -79,6 +65,23 @@ tasks {
                   "${System.env.GCLOUD_IMAGE_REPOSITORY ?: project.name}:${getCheckedOutGitCommitHash()}"]
     }
 }
+
+tasks.withType(Copy).configureEach {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.named("buildLayers") {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.named("distTar") {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.named("distZip") {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 graalvmNative.toolchainDetection = false
 micronaut {
     runtime("netty")
