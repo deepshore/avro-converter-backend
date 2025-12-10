@@ -2,8 +2,8 @@ package de.deepshore.kafka.models;
 
 import io.micronaut.core.annotation.Introspected;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Pattern;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 
 @Introspected
 public class    XsdPack {

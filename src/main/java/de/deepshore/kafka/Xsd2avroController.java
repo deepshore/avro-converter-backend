@@ -1,6 +1,6 @@
 package de.deepshore.kafka;
 
-import com.github.jcustenborder.kafka.connect.transform.xml.FromXml;
+import io.github.deepshore.kafka.connect.transform.xml.FromXml;
 import de.deepshore.kafka.models.AvroPack;
 import de.deepshore.kafka.models.XsdPack;
 import io.confluent.connect.avro.AvroData;
@@ -15,7 +15,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
