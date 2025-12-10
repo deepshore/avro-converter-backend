@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **BREAKING**: Upgraded Java from version 11 to 21
 - Updated Shadow plugin from legacy version 7.1.2 to new Gradle Shadow plugin 8.3.5
 - Updated Docker base image from `azul/zulu-openjdk-alpine:11` to `azul/zulu-openjdk-alpine:21`
+- Updated GitHub Actions workflow to use JDK 21
+- Updated GitHub Actions versions (checkout@v4, cache@v4, setup-java@v4, auth@v2, setup-gcloud@v2)
 - Migrated from `javax.validation.*` to `jakarta.validation.*` annotations (Jakarta EE 9+ compatibility)
 - Updated kafka-connect-transform-xml package from `com.github.jcustenborder` to `io.github.deepshore` (version 0.1.5.5)
 
