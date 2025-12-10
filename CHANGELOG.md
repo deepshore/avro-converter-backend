@@ -14,8 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **BREAKING**: Upgraded Java from version 11 to 21
 - Updated Shadow plugin from legacy version 7.1.2 to new Gradle Shadow plugin 8.3.5
 - Updated Docker base image from `azul/zulu-openjdk-alpine:11` to `azul/zulu-openjdk-alpine:21`
-- Updated GitHub Actions workflow to use JDK 21
-- Updated GitHub Actions versions (checkout@v4, cache@v4, setup-java@v4, auth@v2, setup-gcloud@v2)
+- **BREAKING**: Removed Google Cloud Platform deployment from CI/CD workflow
+- Simplified GitHub Actions workflow to build Docker image and create releases on main branch
+- Docker images now pushed to GitHub Container Registry (ghcr.io) instead of GCP
+- Updated GitHub Actions versions (checkout@v4, cache@v4, setup-java@v4, docker/login-action@v3, docker/metadata-action@v5)
 - Migrated from `javax.validation.*` to `jakarta.validation.*` annotations (Jakarta EE 9+ compatibility)
 - Updated kafka-connect-transform-xml package from `com.github.jcustenborder` to `io.github.deepshore` (version 0.1.5.5)
 
@@ -26,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added Confluent Maven repository configuration
 - Added duplicate handling strategy for Gradle Copy tasks to resolve build conflicts
 - Added `application-test.yml` with random port configuration for test environment
+- Added GitHub Container Registry publishing with automatic tagging (latest, branch-sha, branch name)
 
 ### Fixed
 - Fixed duplicate jar handling during build process (jaxb-core conflicts)
